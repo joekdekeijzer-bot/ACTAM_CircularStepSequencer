@@ -1,5 +1,5 @@
 # Introduction
-For this project I wanted to take something quite standard and give it a unique twist. So I decided to create a drum machine with a circular step sequencer. I got the inspiration from the course "Computer Music: Representations and Models". In this course we watched a video where different rhythms where represented a circular manner and thought is was a quite intuitive way of looking at rhythm. 
+For this project I wanted to take something quite standard and give it a unique twist. So I decided to create a drum machine with a circular step sequencer. I got the inspiration from the course "Computer Music: Representations and Models". In this course we watched a video where different rhythms where represented in a circular manner and thought is was a quite intuitive way of looking at rhythm. I also thought it would be fun to play around with different rhythms that way, so this project was a perfect oppurtunity for creating it.
 
 I wanted to focus on making the experience of using the sequencer as user friendly as possible. To achieve this goal I set a few requirements:
 * It had to be **intuitive** to use,
