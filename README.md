@@ -31,7 +31,7 @@ Then, using HTML, two panels are defined: the control panel and the sequencer pa
  
 Firstly, some constants and variables are defined, like the bpm, amount of steps and the location and radius of the circle. The circle itself is defined using svg (Scalable Vector Graphics), this makes it easier to work with radial coordinates, which is perfect for this project. The function drawGrid defines a circle and its ticks, these ticks represent the steps where drum sounds can be placed on. Then there's is also a function called drawPlayhead, this function creates a line from the center of the circle to a point on the circle to indicate where we are in time. Lastly, there are the functions makeDraggable and renderNotes, which allow for drum sounds to be placed on the circle. All sounds have their own corresponding color.
 
-<img width="708" height="672" alt="image" src="https://github.com/user-attachments/assets/4c299dcd-a61d-4a3e-af96-547a082ba0fa" />
+<img width="708/10" height="672/10" alt="image" src="https://github.com/user-attachments/assets/4c299dcd-a61d-4a3e-af96-547a082ba0fa" />
 
 ## Music
 All the drum sounds are defined in an array, and send to destination, using the Tones.js module. The sounds can be played using a function called ```triggerDrum```.
