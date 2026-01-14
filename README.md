@@ -26,7 +26,8 @@ Additionally, Tone.js is used for the creation of music and the project also mak
 ## Graphics
 I start with defining the style using CSS, here the graphics of the general app and the control center are defined. The look of the panels, buttons, sliders and tekst are defined, as well as some general colors that are used.
 Then, using HTML, two panels are defined: the control panel and the sequencer panel. In the control panel all the buttons and sliders are defined. In the sequencer panel, the trash bin and a few graphics for the use of svg are defined. This is the control panel:
-<img width="749" height="478" alt="image" src="https://github.com/user-attachments/assets/5bc2089b-9c3e-4eb1-bbba-b1e851a500b6" />
+
+<img width="749*2/3" height="478*2/3" alt="image" src="https://github.com/user-attachments/assets/5bc2089b-9c3e-4eb1-bbba-b1e851a500b6" />
  
 Firstly, some constants and variables are defined, like the bpm, amount of steps and the location and radius of the circle. The circle itself is defined using svg (Scalable Vector Graphics), this makes it easier to work with radial coordinates, which is perfect for this project. The function drawGrid defines a circle and its ticks, these ticks represent the steps where drum sounds can be placed on. Then there's is also a function called drawPlayhead, this function creates a line from the center of the circle to a point on the circle to indicate where we are in time. Lastly, there are the functions makeDraggable and renderNotes, which allow for drum sounds to be placed on the circle. All sounds have their own corresponding color.
 
