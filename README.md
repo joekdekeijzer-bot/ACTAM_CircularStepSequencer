@@ -12,7 +12,7 @@ On top of that I wanted it to have a electric/futuristic sound, it had to feel l
 HTML Was used for the main content of the project and CSS for the formatting and the graphics for the control center. 
 Furthermore, JavaScript was used for:
 * creating the music with help of the Tones.js module
-* the sequencer graphics with the use svg (this makes it easier to work with circular objects)
+* the sequencer graphics with the use of svg (this makes it easier to work with circular objects)
 * saving/loading through communication with the Firebase database
 * logic of the control center.
 
@@ -25,19 +25,18 @@ Additionally, Tone.js is used for the creation of music and the project also mak
 # Descritpion of the project
 ## Graphics
 I start with defining the style using CSS, here the graphics of the general app and the control center are defined. The look of the panels, buttons, sliders and tekst are defined, as well as some general colors that are used.
-Then, using HTML, two panels are defined: the control panel and the sequencer panel. In the control panel all the buttons and sliders are defined. In the sequencer panel, the trash bin and a few graphics for the use of svg are defined. This is the control panel:
+Then, using HTML, two panels are defined: the control panel and the sequencer panel. In the control panel all the buttons and sliders are defined. In the sequencer panel, the trash bin and a few graphics for the use of svg are defined. This is what the control panel looks like:
 
 <img width="500*" height="319" alt="image" src="https://github.com/user-attachments/assets/5bc2089b-9c3e-4eb1-bbba-b1e851a500b6" />
  
-Firstly, some constants and variables are defined, like the bpm, amount of steps and the location and radius of the circle. The circle itself is defined using svg (Scalable Vector Graphics), this makes it easier to work with radial coordinates, which is perfect for this project. The function drawGrid defines a circle and its ticks, these ticks represent the steps where drum sounds can be placed on. Then there's is also a function called drawPlayhead, this function creates a line from the center of the circle to a point on the circle to indicate where we are in time. Lastly, there are the functions makeDraggable and renderNotes, which allow for drum sounds to be placed on the circle. All sounds have their own corresponding color.
+Firstly, some constants and variables are defined, like the bpm, amount of steps and the location and radius of the circle. The circle itself is defined using svg (Scalable Vector Graphics), this makes it easier to work with radial coordinates, which is perfect for this project. The function ```drawGrid``` defines a circle and its ticks, these ticks represent the steps where drum sounds can be placed on. Then there's also a function called ```drawPlayhead```, this function creates a line from the center of the circle to a point on the circle to indicate where we are in time. Lastly, there are the functions ```makeDraggable``` and ```renderNotes```, which allow for drum sounds to be placed on the circle. All sounds have their own corresponding color.
 
 <img width="472" height="448" alt="image" src="https://github.com/user-attachments/assets/4c299dcd-a61d-4a3e-af96-547a082ba0fa" />
 
 ## Music
 All the drum sounds are defined in an array, and send to destination, using the Tones.js module. The sounds can be played using a function called ```triggerDrum```.
-When the "Play" button is clicked, Playing bocomes True, and the function ```animate``` is triggered. This makes a playhead appear that starts spinning around the circle. A function called ```processAudioTriggers``` checks if the playhead passes a drum Note, when it does, it calls the ```triggerDrum``` function to make its corresponding sound(s). 
-When the button is pressed again (now displaying Stop), Playing become false and the playhead and music disappear. 
-
+When the "Play" button is clicked, Playing bocomes True, and the function ```animate``` is triggered. This makes a playhead appear that starts spinning around the circle. A function called ```processAudioTriggers``` checks if the playhead passes a drum Note, and when it does, it calls the ```triggerDrum``` function to make its corresponding sound(s). 
+When the button is pressed again (now displaying "Stop"), Playing becomes false and the playhead and music disappear. 
 
 ## Firebase
 The script starts with the Firebase configuration, this allows for communication with a database where songs can be saved. The functions ```loadSequence```, ```saveSequence``` and ```deleteSequence``` do exactly as their names say. They use the functions ```getSavedNames``` to get the song names from the database and ```loadSavedList``` to create a list where the songs can be selected. 
