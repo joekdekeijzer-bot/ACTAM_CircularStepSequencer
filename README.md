@@ -16,7 +16,7 @@ Furthermore, JavaScript was used for:
 * Saving/loading through communication with the Firebase database.
 * Logic of the control center
 
-How to start (Libraries, code editor, play the first sound using Tones.js)
+As code editors CodePen and Visaul Studio Code got used. I would say CodePen is recommended for the start of the project, and VSCode for the later part of the project. 
 
 ## Course Concepts
 The course conepts addressed in this web based project are of course the use of HTML, CSS and JavaScript. 
@@ -33,10 +33,10 @@ Firstly, some constants and variables are defined, like the bpm, amount of steps
 <img width="708" height="672" alt="image" src="https://github.com/user-attachments/assets/4c299dcd-a61d-4a3e-af96-547a082ba0fa" />
 
 ## Music
-All the drum sounds are defined in an array, and send to destination, using the Tones.js module. The sounds can be played using a function called triggerDrum.
-When the "Play" button is clicked, it starts the time and the function ```animate``` is triggered. a playhead appears and starts spinning around the circle. A function called processAudioTriggers, checks if the playhead passes a drum sound. When is does, it calls the triggerDrum function to make its corresponding sound(s). 
+All the drum sounds are defined in an array, and send to destination, using the Tones.js module. The sounds can be played using a function called ```triggerDrum```.
+When the "Play" button is clicked, Playing bocomes True, and the function ```animate``` is triggered. This makes a playhead appear that starts spinning around the circle. A function called ```processAudioTriggers```, checks if the playhead passes a drum Note. When it does, it calls the ```triggerDrum``` function to make its corresponding sound(s). 
+When the button is pressed again (now displaying Stop), Playing become false and the playhead and music disappear. 
 
 
 ## Firebase
-It starts with the Firebase configuration, this allows for communication with a database where songs can be saved.
-Used for saving sequences and their settings
+The script starts with the Firebase configuration, this allows for communication with a database where songs can be saved. The functions ```loadSequence```, ```saveSequence``` and ```deleteSequence``` do exactly as their names say. They use the functions ```getSavedNames``` to get the song names from the database and ```loadSavedList``` to create a list where the songs can be selected. 
