@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Circular Step Sequencer</title>
+  <style>
+  :root {
+    --bg-start: #071024;
+    --bg-end: #071226;
+    --panel: rgba(255,255,255,0.02);
+    --text: #e6eef8;
+  }
+
+  /* Page basics */
+  body {
+    height: 100%;
+    font-family: "Segoe UI";
+    background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+    color: var(--text);
+  }
+
+  /* Two-column layout: controls (left) and canvas (right) */
+  .app {
+    display: grid;
+    grid-template-columns: 600px 1fr; /* left column is 600px, right fills the rest */
+    gap: 18px;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  /* Panels with a clean look */
+  .panel {
+    background: linear-gradient(180deg, var(--panel), rgba(255,255,255,0.01));
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 24px rgba(2,6,23,0.6);
+  }
+
+  h1 {
+    font-size: 16px;
+    margin: 0 0 8px;
+  }
+
+  /* Column with controls */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+  }
+
+  button {
+    background-color: #60a5fa;
+    border: 0;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    width:100px;
+  }
+
+  /* Canvas alignment */
+  .canvas-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  label {
+    font-size: 13px;
+  }
+
+  svg {
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  /* Notes and dragging visuals */
+  .note {
+    cursor: pointer;
+  }
+
+  .note circle {
+    transition: transform 120ms;
+  }
+
+  .note-label {
+    font-size: 31px;
+    fill: white;
+  }
+
+  .note.dragging circle {
+    transform: scale(1.18);
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 8px;
+    background-color: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  /* Controls visuals */
+  .drum-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .drum-palette .drum {
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: black;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--c);
+    transition: transform 0.1s;
+    text-align: center;
+    min-width: 50px;
+  }
+
+  .drum-palette .drum:hover {
+    transform: scale(1.1);
+  }
+
+  .drum:active {
+    cursor: grabbing;
+  }
+
+  #bin {
+    position:absolute; 
+    bottom:20px; 
+    right:20px;
+    width:60px; 
+    height:60px; 
+    background:#ef4444;
+    border-radius:12px; 
+    display:flex; 
+    align-items:center;
+    justify-content:center; 
+    color:white; 
+    font-weight:bold;
+    cursor:pointer; 
+    transition: transform 0.2s ease;
+  }
+
+
+  .bpm-compact {
+    position:absolute;
+    left:55px;
+    display:flex;
+    gap:6px;
+  }
+
+  #bpmMinus {
+    background:transparent;
+    color:var(--text);
+    cursor:pointer;
+    width:28px;
+    height:24px;
+    font-size:12px;
+    line-height:0.5;
+  }
+
+  #bpmPlus {
+    background:transparent;
+    color:var(--text);
+    cursor:pointer;
+    width:28px;
+    height:24px;
+    font-size:12px;
+    line-height:0.5;
+  }
+
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="panel">
+      <h1>Circular Step Sequencer</h1>
+      <div class="controls">
+        <div>
+          <div style="position:relative;display:flex;align-items:center;">
+            <label style="min-width:140px;">BPM: <span id="bpmVal">120</span></label>
+            <div class="bpm-compact">
+                <button id="bpmMinus" aria-label="Decrease BPM">−</button>
+                <button id="bpmPlus" aria-label="Increase BPM">+</button>
+            </div>
+          </div>
+          <input id="bpm" type="range" min="30" max="240" value="120">
+        </div>
+        <div><label>Steps per loop: <span id="stepsVal">8</span></label><input id="steps" type="range" min="3" max="32" step="1" value="8"></div>
+        <div style="display:flex;gap:8px"><button id="play">Play</button><button id="clear">Clear circle</button></div>
+        <div class="save-row" style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <input id="seqName" placeholder="Sequence name" style="padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);">
+          <button id="saveSeq">Save</button>
+          <select id="savedSeqs" style="padding:6px;border-radius:6px;background:transparent;color:var(--text);min-width:140px"></select>
+          <button id="deleteSeq">Delete</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center"><label class="badge">Drag sounds to place them on the circle</label></div>
+        <div class="drum-palette">
+          <div class="drum" data-drum="kick"   style="--c:#ef4444">Kick</div>
+          <div class="drum" data-drum="snare"  style="--c:#f97316">Snare</div>
+          <div class="drum" data-drum="clap"   style="--c:#fb7185">Clap</div>
+          <div class="drum" data-drum="hiHatClosed" style="--c:#38bdf8">Hi-Hat C</div>
+          <div class="drum" data-drum="hiHatOpen"   style="--c:#0ea5e9">Hi-Hat O</div>
+          <div class="drum" data-drum="tomLow"  style="--c:#a855f7">Tom L</div>
+          <div class="drum" data-drum="tomMid"  style="--c:#9333ea">Tom M</div>
+          <div class="drum" data-drum="tomHigh" style="--c:#7c3aed">Tom H</div>
+          <div class="drum" data-drum="perc"    style="--c:#22c55e">Perc</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel canvas-wrap">
+      <svg id="svg" viewBox="0 0 800 800" role="img" aria-label="circular sequencer">
+        <g id="grid"></g>
+        <g id="notes"></g>
+        <g id="playhead"></g>
+      </svg>
+      <div id="bin">🗑</div>
+    </div>
+  </div>
+
+  
+  <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
+  <script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getFirestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    //Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyC2cPOtX_iPcPBM9p8SoYXAk04r6xsfjXs",
+      authDomain: "drum-machine-33f6f.firebaseapp.com",
+      projectId: "drum-machine-33f6f",
+      storageBucket: "drum-machine-33f6f.firebasestorage.app",
+      messagingSenderId: "579402353405",
+      appId: "1:579402353405:web:42be67209aaea685684c94"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+
+    //Defining constants and variables
+    const svg = document.getElementById('svg');
+    const notesG = document.getElementById('notes');
+    const playheadG = document.getElementById('playhead');
+    const gridG = document.getElementById('grid');
+    const bpmEl = document.getElementById('bpm');
+    const bpmVal = document.getElementById('bpmVal');
+    const stepsEl = document.getElementById('steps');
+    const stepsVal = document.getElementById('stepsVal');
+    const playBtn = document.getElementById('play');
+    const clearBtn = document.getElementById('clear');
+
+    //tooltip element for hover labels
+    const tooltip = document.createElement('div');
+    tooltip.style.position = 'absolute';
+    tooltip.style.pointerEvents = 'none';
+    tooltip.style.background = 'rgba(0,0,0,0.75)';
+    tooltip.style.color = 'white';
+    tooltip.style.padding = '6px 8px';
+    tooltip.style.borderRadius = '6px';
+    tooltip.style.fontSize = '12px';
+    tooltip.style.whiteSpace = 'nowrap';
+    tooltip.style.transform = 'translate(-50%, -120%)';
+    tooltip.style.display = 'none';
+    document.body.appendChild(tooltip);
+
+    const DRUM_LABELS = {
+      kick: 'Kick', snare: 'Snare', clap: 'Clap', hiHatClosed: 'Hi-Hat C', hiHatOpen: 'Hi-Hat O',
+      tomLow: 'Tom L', tomMid: 'Tom M', tomHigh: 'Tom H', perc: 'Perc'
+    };
+
+    let cx = 400, cy = 400, radius = 260;
+
+
+    //Sequencer state, by default null/false/zero
+    let notes = [] //for each will be specified: {id, angle (rad 0,...,2pi), freqs: [freq1,freq2,...], color}
+    let isPlaying = false;
+    let startTime = null;
+    let lastProgress = 0;
+    let draggedDrum = null;
+
+    //musical settings
+    let bpm = +bpmEl.value;  //defining a bpm variable
+    let steps = +stepsEl.value; //defining a steps variable
+    let loopBeats = 4; //4 beats per loop
+    
+    const drums = {
+      kick: new Tone.MembraneSynth().toDestination(),
+      snare: new Tone.NoiseSynth({envelope: {attack: 0.001, decay: 0.2, sustain: 0 }}).toDestination(),
+      clap: new Tone.NoiseSynth({envelope: {attack: 0.001, decay: 0.12, sustain: 0 }}).toDestination(),
+  hiHatClosed: new Tone.MetalSynth({frequency:400,envelope: {attack:0.001, decay:0.08, release:0.01 }
+              ,harmonicity:5.1,modulationIndex:32,resonance:4000}).toDestination(),
+  hiHatOpen: new Tone.MetalSynth({frequency:400,envelope: { attack:0.001, decay: 0.4, release: 0.2 }
+              ,harmonicity:5.1,modulationIndex:32,resonance:4000}).toDestination(),
+      tomLow: new Tone.MembraneSynth({ pitchDecay: 0.07 }).toDestination(),
+      tomMid: new Tone.MembraneSynth({ pitchDecay: 0.04 }).toDestination(),
+      tomHigh: new Tone.MembraneSynth({ pitchDecay: 0.01 }).toDestination(),
+      perc: new Tone.Synth({oscillator: { type: "square" },envelope: { attack: 0.001, decay: 0.15, sustain: 0 }}).toDestination()
+    };
+
+//Angle-related functions
+
+    function angleFromPoint(x,y){
+      return Math.atan2(y-cy,x-cx); // -pi,...,pi
+    }
+
+    function normalizeAngle(a){
+      let v = a + Math.PI/2; //defining 0 to be on top
+      while(v<0) v += Math.PI*2;
+      while(v>=Math.PI*2) v -= Math.PI*2; //confining the angle to the interval [0,2pi)
+      return v;
+    }
+
+    function pointOnCircle(angle, r=radius){
+      const ang = angle - Math.PI/2; //convert back
+      return {x: cx + Math.cos(ang)*r, y: cy + Math.sin(ang)*r};  //difining x and y coordinates for point on circle
+    }
+
+//Graphics
+
+    //draw circle + ticks
+    function drawGrid(){
+      gridG.innerHTML = '';  //clear grid
+      const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      circ.setAttribute('cx',cx);circ.setAttribute('cy',cy);circ.setAttribute('r',radius);
+      circ.setAttribute('stroke','rgba(255,255,255,0.5)');circ.setAttribute('stroke-width',4);circ.setAttribute('fill','none');
+      gridG.appendChild(circ);
+
+      for(let i=0;i<steps;i++){
+        const ang = (i/steps) * Math.PI*2 - Math.PI/2;
+        const x1 = cx + Math.cos(ang)*(radius+12);
+        const y1 = cy + Math.sin(ang)*(radius+12);
+        const x2 = cx + Math.cos(ang)*(radius-12);
+        const y2 = cy + Math.sin(ang)*(radius-12);
+        const tick = document.createElementNS('http://www.w3.org/2000/svg','line');
+        tick.setAttribute('x1',x1);tick.setAttribute('y1',y1);tick.setAttribute('x2',x2);tick.setAttribute('y2',y2);
+        tick.setAttribute('stroke','rgba(255,255,255,0.5)');tick.setAttribute('stroke-width',4);
+        gridG.appendChild(tick);
+      }
+    }
+
+    drawGrid();
+
+    function drawPlayhead(angle){
+      playheadG.innerHTML = '';
+      const p1 = pointOnCircle(angle, 0);
+      const p2 = pointOnCircle(angle, radius+8);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',p1.x);
+      line.setAttribute('y1',p1.y);
+      line.setAttribute('x2',p2.x);
+      line.setAttribute('y2',p2.y);
+      line.setAttribute('stroke', 'rgba(127, 219, 255, 0.95)');
+      line.setAttribute('stroke-width',3);
+      line.setAttribute('filter','url(#glow)');
+      playheadG.appendChild(line);
+    }
+
+    //create a pie-sector path for rendering notes
+    function sectorPath(cx, cy, r, startAngle, endAngle){
+      const a1 = startAngle - Math.PI/2;
+      const a2 = endAngle - Math.PI/2;
+      const x1 = cx + Math.cos(a1) * r;
+      const y1 = cy + Math.sin(a1) * r;
+      const x2 = cx + Math.cos(a2) * r;
+      const y2 = cy + Math.sin(a2) * r;
+      const large = (endAngle - startAngle) % (Math.PI*2) > Math.PI ? 1 : 0;
+      return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+    }
+
+    //render notes: draw a circle at each occupied step. If multiple notes share the same step,
+    //draw a pie divided into colored slices so each slice represents a note.
+    function renderNotes(){
+      notesG.innerHTML = '';  //remove old notes
+
+      // Group notes by step index
+      const groups = {};
+      notes.forEach(n => {
+        const idx = Math.round((n.angle / (Math.PI*2)) * steps) % steps;
+        if(!groups[idx]) groups[idx] = [];
+        groups[idx].push(n);
+      });      
+
+      Object.keys(groups).forEach(k => {
+        const idx = Number(k);
+        const group = groups[idx];
+        //compute center point for this step on the big circle
+        const baseAngle = (idx / steps) * Math.PI * 2;
+        const center = pointOnCircle(baseAngle, radius);
+
+        if(group.length === 1){
+          //single note: draw a circle
+          const n = group[0];
+          const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+          g.classList.add('note');
+          g.setAttribute('transform', `translate(${center.x},${center.y})`);
+
+          const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+          circle.setAttribute('r',12);
+          circle.setAttribute('fill', n.color);
+          g.appendChild(circle);
+
+          //show tooltip using DRUM_LABELS when hovering a single note
+          g.addEventListener('pointerenter', (ev) => {
+            const label = Array.isArray(n.drums) ? n.drums.map(d => DRUM_LABELS[d] || d).join(', ') : (DRUM_LABELS[n.drums] || n.drums);
+            tooltip.textContent = label;
+            tooltip.style.display = 'block';
+            tooltip.style.left = ev.clientX + 'px';
+            tooltip.style.top = ev.clientY + 'px';
+          });
+          g.addEventListener('pointermove', (ev) => {
+            tooltip.style.left = ev.clientX + 'px';
+            tooltip.style.top = ev.clientY + 'px';
+          });
+          g.addEventListener('pointerleave', () => { tooltip.style.display = 'none'; });
+
+          makeDraggable(g, n);
+          notesG.appendChild(g);
+        } else {
+          // multiple notes: draw pie slices inside a small circle centered at 'center'
+          const sliceR = 14; // radius of the small pie
+          const len = group.length;
+
+          // create a parent group for this step
+          const pg = document.createElementNS('http://www.w3.org/2000/svg','g');
+          pg.classList.add('note-group');
+
+          group.forEach((n, j) => {
+            const start = (j/len) * Math.PI*2;
+            const end = ((j+1)/len) * Math.PI*2;
+            const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+            path.setAttribute('d', sectorPath(center.x, center.y, sliceR, start, end));
+            path.setAttribute('fill', n.color);
+            path.setAttribute('stroke', 'rgba(0,0,0,0.08)');
+            path.setAttribute('stroke-width', 0.5);
+
+            // wrap each slice in a group so it can be dragged individually
+            const sg = document.createElementNS('http://www.w3.org/2000/svg','g');
+            sg.classList.add('note');
+            sg.appendChild(path);
+            // place transparent hit circle on top to improve pointer behaviour
+            const hit = document.createElementNS('http://www.w3.org/2000/svg','circle');
+            hit.setAttribute('r', sliceR);
+            hit.setAttribute('fill', 'transparent');
+            sg.appendChild(hit);
+
+            makeDraggable(sg, n);
+
+            pg.appendChild(sg);
+          });
+
+          //show a vertical list of drum names
+          pg.addEventListener('pointerenter', (ev) => {
+            const labels = group.map(n => DRUM_LABELS[n.drums] || n.drums);
+            tooltip.innerHTML = labels.map(l => `<div style="padding:2px 6px">${l}</div>`).join('');
+            tooltip.style.display = 'block';
+            tooltip.style.whiteSpace = 'normal';
+            tooltip.style.left = ev.clientX + 'px';
+            tooltip.style.top = ev.clientY + 'px';
+          });
+          pg.addEventListener('pointermove', (ev) => {
+            tooltip.style.left = ev.clientX + 'px';
+            tooltip.style.top = ev.clientY + 'px';
+          });
+          pg.addEventListener('pointerleave', () => { tooltip.style.display = 'none'; tooltip.style.whiteSpace = 'nowrap'; });
+
+          notesG.appendChild(pg);
+        }
+      });
+    }
+
+    //make drum palette draggable
+    document.querySelectorAll('.drum').forEach(drum => {
+      drum.draggable = true;
+      drum.addEventListener('dragstart', () => {
+        draggedDrum = drum;
+      });
+      drum.addEventListener('dragend', () => {
+        draggedDrum = null;
+      });
+    });
+    
+    //allow dropping on the SVG
+    svg.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+
+    svg.addEventListener('drop', e => {
+      if (!draggedDrum) return;
+
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      const angle = normalizeAngle(angleFromPoint(svgP.x, svgP.y));
+      const snapped =Math.round((angle / (Math.PI * 2)) * steps) / steps * Math.PI * 2;
+
+      const drumName = draggedDrum.dataset.drum;
+      const color = getComputedStyle(draggedDrum).getPropertyValue('--c');
+
+      notes.push({
+        id: Date.now() + Math.random(),
+        angle: snapped,
+        drums: drumName,
+        color: color
+      });
+
+      renderNotes();
+    });
+
+    //draggable behaviour
+    function makeDraggable(elem, note){
+      let dragging = false;
+      const binEl = document.getElementById('bin');
+
+      function onPointerDown(ev){
+        ev.preventDefault(); 
+        elem.classList.add('dragging'); 
+        dragging = true; 
+        elem.setPointerCapture(ev.pointerId);
+      }
+
+      function onPointerMove(ev){
+        if(!dragging) return;
+
+        // Check if pointer is over bin
+        const binRect = binEl.getBoundingClientRect();
+        const overBin = ev.clientX >= binRect.left && ev.clientX <= binRect.right &&
+                        ev.clientY >= binRect.top && ev.clientY <= binRect.bottom;
+
+        // Scale bin when hovering
+        if(overBin){
+          binEl.style.transform = "scale(1.2)";
+          elem.setAttribute('opacity', 0.5);
+        } else {
+          binEl.style.transform = "scale(1)";
+          elem.setAttribute('opacity', 1);
+
+          // Update note position on circle
+          const pt = svg.createSVGPoint(); 
+          pt.x = ev.clientX; pt.y = ev.clientY;
+          const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+          const a = normalizeAngle(angleFromPoint(svgP.x, svgP.y));
+          const snapped = Math.round((a/(Math.PI*2))*steps) / steps * Math.PI*2;
+          note.angle = snapped;
+        }
+
+        renderNotes();
+      }
+
+      function onPointerUp(ev){
+        if(!dragging) return; 
+        dragging = false; 
+        elem.classList.remove('dragging'); 
+        elem.releasePointerCapture(ev.pointerId);
+
+        // Reset bin scale
+        binEl.style.transform = "scale(1)";
+
+        // Remove note if dropped in bin
+        const binRect = binEl.getBoundingClientRect();
+        if(ev.clientX >= binRect.left && ev.clientX <= binRect.right &&
+           ev.clientY >= binRect.top && ev.clientY <= binRect.bottom){
+          notes = notes.filter(n=>n.id !== note.id);
+          renderNotes();
+        }
+      }
+
+      elem.addEventListener('pointerdown', onPointerDown);
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+    }
+
+//Music
+
+    function triggerDrum(type) {
+      const d = drums[type];
+      if (!d) return;
+
+      if (type === "kick") {
+        d.triggerAttackRelease("C1", "8n");
+      }
+      else if (type === "snare" || type === "clap") {
+        d.triggerAttackRelease("16n");
+      }
+      else if (type === "hiHatClosed") {
+        d.triggerAttackRelease("32n");
+      }
+      else if (type === "hiHatOpen") {
+        d.triggerAttackRelease("8n");
+      }
+      else if (type.startsWith("tom")) {
+        d.triggerAttackRelease("C2", "8n");
+      }
+      else if (type === "perc") {
+        d.triggerAttackRelease("C4", "16n");
+      }
+    }
+
+    //make the drum buttons make sound
+    document.querySelectorAll(".drum").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await Tone.start();
+        const drumType = btn.dataset.drum;
+        triggerDrum(drumType);
+      });
+    });
+
+    function processAudioTriggers(prevProgress, curProgress){
+      notes.forEach(n=>{
+        const na = (n.angle/(Math.PI*2));
+        if(prevProgress <= curProgress){
+          if(na > prevProgress && na <= curProgress){ triggerDrum(n.drums);}
+        } 
+        else {
+          if(na > prevProgress || na <= curProgress){ triggerDrum(n.drums);}
+        }
+      });
+    }
+
+    //main loop
+    function animate(time){
+      if(!isPlaying){ requestAnimationFrame(animate); return; }
+      if(!startTime) startTime = time;
+      const elapsedMs = (time - startTime);
+      const loopDuration = (60 / bpm) * 1000 * loopBeats; // ms
+      const prog = (elapsedMs % loopDuration) / loopDuration;
+      const angle = prog * Math.PI*2;
+      drawPlayhead(angle);
+      processAudioTriggers(lastProgress, prog);
+      lastProgress = prog;
+      requestAnimationFrame(animate);
+    }
+
+    playBtn.addEventListener('click', async ()=>{
+      if(!isPlaying){
+        await Tone.start(); // starts Tone.js AudioContext
+        isPlaying = true; playBtn.textContent = 'Stop'; startTime = performance.now();
+        lastProgress = 0;}
+      else {
+        isPlaying = false; playBtn.textContent = 'Play'; playheadG.innerHTML = '';
+      }
+    });
+
+    requestAnimationFrame(animate);
+
+    //BPM control
+    //helper to set BPM (clamps to range, updates UI and internal variable)
+    function setBpm(v){
+      const min = Number(bpmEl.min) || 30;
+      const max = Number(bpmEl.max) || 240;
+      const nv = Math.max(min, Math.min(max, Math.round(v)));
+      bpm = nv;
+      bpmEl.value = nv;
+      bpmVal.textContent = nv;
+      if(isPlaying){
+        startTime = performance.now(); //reset timing so the sequencer phase starts from 0 at the current time
+        lastProgress = 0;
+        // redraw playhead at top
+        try {
+          if (playheadG) drawPlayhead(0);
+        } catch (e) {}
+      }
+    }
+
+    //extracting the value from bpm slider when it changes
+    bpmEl.addEventListener('change', () => { setBpm(+bpmEl.value); });
+
+    // plus/minus buttons
+    const bpmPlus = document.getElementById('bpmPlus');
+    const bpmMinus = document.getElementById('bpmMinus');
+    if(bpmPlus) bpmPlus.addEventListener('click', ()=> setBpm(bpm + 1));
+    if(bpmMinus) bpmMinus.addEventListener('click', ()=> setBpm(bpm - 1));
+    stepsEl.addEventListener('input', () => {steps = +stepsEl.value;stepsVal.textContent = steps;drawGrid(); //extracting the value from steps slider
+    notes.forEach(n => {const stepIndex = Math.round((n.angle / (Math.PI*2)) * steps);n.angle = (stepIndex / steps) * Math.PI*2;});renderNotes();}); //quantization for snapping notes to the ticks
+
+    clearBtn.addEventListener('click', () => {
+      notes = [];
+      renderNotes();
+    });
+
+//Save/load functionality
+
+    async function getSavedNames(){
+      const out = [];
+      try{
+        const snap = await getDocs(collection(db, 'sequences'));
+        snap.forEach(d => out.push(d.id));
+      }catch(e){ console.warn('getSavedNames', e); }
+      return out.sort();
+    }
+
+    async function loadSavedList(){
+      const sel = document.getElementById('savedSeqs'); if(!sel) return;
+      const names = await getSavedNames();
+      sel.innerHTML = '';
+      names.forEach(n => { const opt = document.createElement('option'); opt.value = n; opt.textContent = n; sel.appendChild(opt); });
+    }
+
+    async function saveSequence(){
+      const name = document.getElementById('seqName').value.trim();
+      if(!name){ alert('Enter a sequence name'); return; }
+      const payload = {
+        notes: notes.map(n=>({angle:n.angle,drums:n.drums,color:n.color,id:n.id})),
+        bpm, steps
+      };
+      try{
+        await setDoc(doc(db, 'sequences', name), payload);
+        await loadSavedList();
+        const sel = document.getElementById('savedSeqs'); if(sel) sel.value = name;
+        alert('Saved "' + name + '"');
+      }catch(e){ console.warn('saveSequence', e); alert('Failed to save sequence'); }
+    }
+
+    async function loadSequence(){
+      const sel = document.getElementById('savedSeqs'); if(!sel) return;
+      const name = sel.value; if(!name) return;
+      try{
+        const docSnap = await getDoc(doc(db, 'sequences', name));
+        if(!docSnap.exists()) return alert('Saved sequence not found');
+        const obj = docSnap.data();
+        notes = (obj.notes || []).map(n=>({id:n.id||Date.now()+Math.random(), angle:n.angle, drums:n.drums, color:n.color}));
+        steps = obj.steps || steps;
+        bpm = obj.bpm || bpm;
+        stepsEl.value = steps; stepsVal.textContent = steps;
+        setBpm(bpm);
+        drawGrid(); renderNotes();
+      }catch(e){ console.warn('loadSequence', e); alert('Failed to load sequence'); }
+    }
+
+    async function deleteSequence(){
+      const sel = document.getElementById('savedSeqs'); if(!sel) return;
+      const name = sel.value; if(!name) return;
+      if(!confirm('Delete sequence "' + name + '"?')) return;
+      try{
+        await deleteDoc(doc(db, 'sequences', name));
+        await loadSavedList();
+      }catch(e){ console.warn('deleteSequence', e); alert('Failed to delete sequence'); }
+    }
+
+    document.getElementById('saveSeq')?.addEventListener('click', saveSequence);
+    document.getElementById('deleteSeq')?.addEventListener('click', deleteSequence);
+    // load immediately when selection changes
+    document.getElementById('savedSeqs')?.addEventListener('change', (ev) => {
+      const sel = ev.target;
+      if(sel && sel.value) {
+        const nameInput = document.getElementById('seqName'); if(nameInput) nameInput.value = sel.value;
+        loadSequence();
+      }
+    });
+
+    loadSavedList();
+
+  </script>
+</body>
+</html>
