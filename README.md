@@ -11,12 +11,12 @@ On top of that I wanted it to have a electric/futuristic sound, it had to feel l
 # Technologies Used
 HTML Was used for the main content of the project and CSS for the formatting and the graphics for the control center. 
 Furthermore, JavaScript was used for:
-* Creating the music with help of the Tones.js module.
-* The sequencer graphics with the use svg (this makes it easier to work with circular objects)
-* Saving/loading through communication with the Firebase database.
-* Logic of the control center
+* creating the music with help of the Tones.js module
+* the sequencer graphics with the use svg (this makes it easier to work with circular objects)
+* saving/loading through communication with the Firebase database
+* logic of the control center.
 
-As code editors CodePen and Visaul Studio Code got used. I would say CodePen is recommended for the start of the project, and VSCode for the later part of the project. 
+The code editors used for this project are CodePen and Visual Studio Code. I would say CodePen is recommended for the start of the project, and VSCode for the later part of the project. 
 
 ## Course Concepts
 The course conepts addressed in this web based project are of course the use of HTML, CSS and JavaScript. 
@@ -34,7 +34,7 @@ Firstly, some constants and variables are defined, like the bpm, amount of steps
 
 ## Music
 All the drum sounds are defined in an array, and send to destination, using the Tones.js module. The sounds can be played using a function called ```triggerDrum```.
-When the "Play" button is clicked, Playing bocomes True, and the function ```animate``` is triggered. This makes a playhead appear that starts spinning around the circle. A function called ```processAudioTriggers```, checks if the playhead passes a drum Note. When it does, it calls the ```triggerDrum``` function to make its corresponding sound(s). 
+When the "Play" button is clicked, Playing bocomes True, and the function ```animate``` is triggered. This makes a playhead appear that starts spinning around the circle. A function called ```processAudioTriggers``` checks if the playhead passes a drum Note, when it does, it calls the ```triggerDrum``` function to make its corresponding sound(s). 
 When the button is pressed again (now displaying Stop), Playing become false and the playhead and music disappear. 
 
 
