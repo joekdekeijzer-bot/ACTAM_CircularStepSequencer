@@ -322,7 +322,7 @@
     }
 
     function pointOnCircle(angle, r=radius){
-      const ang = angle - Math.PI/2; //convert back
+      const ang = angle - Math.PI/2; //convert back to zero at x-axis
       return {x: cx + Math.cos(ang)*r, y: cy + Math.sin(ang)*r};  //difining x and y coordinates for point on circle
     }
 
@@ -766,5 +766,6 @@
   </script>
 </body>
 </html>
+
 
 
