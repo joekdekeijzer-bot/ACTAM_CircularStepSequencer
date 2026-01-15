@@ -735,7 +735,8 @@
         bpm = obj.bpm || bpm;
         stepsEl.value = steps; stepsVal.textContent = steps;
         setBpm(bpm);
-        drawGrid(); renderNotes();
+        drawGrid(); 
+        renderNotes();
       }catch(e){ console.warn('loadSequence', e); alert('Failed to load sequence'); }
     }
 
@@ -765,3 +766,4 @@
   </script>
 </body>
 </html>
+
