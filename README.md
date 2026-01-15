@@ -35,7 +35,7 @@ JavaScript is used for the graphics of the sequencer. Firstly some constants and
 
 ## Music
 All the drum sounds are defined in an array, and send to destination, using the Tones.js module. The sounds can be played using a function called ```triggerDrum```.
-When the "Play" button is clicked, Playing bocomes True, and the function ```animate``` is triggered. This makes a playhead appear that starts spinning around the circle. A function called ```processAudioTriggers``` checks if the playhead passes a drum Note, and when it does, it calls the ```triggerDrum``` function to make its corresponding sound(s). 
+When the "Play" button is clicked, Playing becomes True, and the function ```animate``` is triggered. This makes a playhead appear that starts spinning around the circle. A function called ```processAudioTriggers``` checks if the playhead passes a drum note, and when it does, it calls the ```triggerDrum``` function to make its corresponding sound(s). 
 When the button is pressed again (now displaying "Stop"), Playing becomes false and the playhead and music disappear. 
 
 ## Firebase
