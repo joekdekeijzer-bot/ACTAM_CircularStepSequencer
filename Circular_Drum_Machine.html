@@ -383,7 +383,7 @@
     function renderNotes(){
       notesG.innerHTML = '';  //remove old notes
 
-      // Group notes by step index
+      //group notes by step index
       const groups = {};
       notes.forEach(n => {
         const idx = Math.round((n.angle / (Math.PI*2)) * steps) % steps;
@@ -427,11 +427,11 @@
           makeDraggable(g, n);
           notesG.appendChild(g);
         } else {
-          // multiple notes: draw pie slices inside a small circle centered at 'center'
+          //multiple notes: draw pie slices inside a small circle centered at 'center'
           const sliceR = 14; // radius of the small pie
           const len = group.length;
 
-          // create a parent group for this step
+          //create a parent group for this step
           const pg = document.createElementNS('http://www.w3.org/2000/svg','g');
           pg.classList.add('note-group');
 
@@ -444,11 +444,11 @@
             path.setAttribute('stroke', 'rgba(0,0,0,0.08)');
             path.setAttribute('stroke-width', 0.5);
 
-            // wrap each slice in a group so it can be dragged individually
+            //wrap each slice in a group so it can be dragged individually
             const sg = document.createElementNS('http://www.w3.org/2000/svg','g');
             sg.classList.add('note');
             sg.appendChild(path);
-            // place transparent hit circle on top to improve pointer behaviour
+            //place transparent hit circle on top to improve pointer behaviour
             const hit = document.createElementNS('http://www.w3.org/2000/svg','circle');
             hit.setAttribute('r', sliceR);
             hit.setAttribute('fill', 'transparent');
@@ -534,12 +534,12 @@
       function onPointerMove(ev){
         if(!dragging) return;
 
-        // Check if pointer is over bin
+        //check if pointer is over bin
         const binRect = binEl.getBoundingClientRect();
         const overBin = ev.clientX >= binRect.left && ev.clientX <= binRect.right &&
                         ev.clientY >= binRect.top && ev.clientY <= binRect.bottom;
 
-        // Scale bin when hovering
+        //scale bin when hovering
         if(overBin){
           binEl.style.transform = "scale(1.2)";
           elem.setAttribute('opacity', 0.5);
@@ -547,7 +547,7 @@
           binEl.style.transform = "scale(1)";
           elem.setAttribute('opacity', 1);
 
-          // Update note position on circle
+          //update note position on circle
           const pt = svg.createSVGPoint(); 
           pt.x = ev.clientX; pt.y = ev.clientY;
           const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
@@ -565,10 +565,10 @@
         elem.classList.remove('dragging'); 
         elem.releasePointerCapture(ev.pointerId);
 
-        // Reset bin scale
+        //reset bin scale
         binEl.style.transform = "scale(1)";
 
-        // Remove note if dropped in bin
+        //remove note if dropped in bin
         const binRect = binEl.getBoundingClientRect();
         if(ev.clientX >= binRect.left && ev.clientX <= binRect.right &&
            ev.clientY >= binRect.top && ev.clientY <= binRect.bottom){
@@ -766,6 +766,7 @@
   </script>
 </body>
 </html>
+
 
 
 
